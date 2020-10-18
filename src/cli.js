@@ -1,6 +1,10 @@
 import arg from 'arg';
 import inquirer from 'inquirer';
 
+import fs from "fs";
+
+import menv from "./menv";
+
 function parseArgumentsIntoOptions(rawArgs) {
     const args = arg(
         {
@@ -187,22 +191,24 @@ async function promptForMissingOptions(options) {
 
 // actions - // TODO: To be moved to another file
 
-const menv = {
+const actions = {
     init: function ({ key = "" }) {
         return new Promise((resolve, reject) => {
-            console.log(`init ${key}`);
+            menv("init");
             resolve();
         })
     },
     add: function ({ key = "", value = "" }) {
         return new Promise((resolve, reject) => {
             console.log(`add ${key} with value: ${value}`);
+            menv("add", key, value);
             resolve();
         })
     },
     get: function ({ key = "" }) {
         return new Promise((resolve, reject) => {
             console.log(`get ${key}`);
+            menv("get", key);
             resolve();
         })
     },
@@ -210,6 +216,7 @@ const menv = {
         return new Promise((resolve, reject) => {
             if(confirmation) {
                 console.log(`update ${key} to ${value}`);
+                menv("edit", key, value);
             }
             else {
                 console.log("edit process not confirmed");
@@ -222,6 +229,7 @@ const menv = {
         return new Promise((resolve, reject) => {
             if(confirmation) {
                 console.log(`delete ${key}`);
+                menv("delete", key);
             }
             else {
                 console.log("delete process not confirmed");
@@ -238,19 +246,19 @@ async function proceedOptionsAction (options) {
             console.log("show help");
         }
         else if(options.init) {
-            await menv.init(options);
+            await actions.init(options);
         }
         else if(options.add) {
-            await menv.add(options);
+            await actions.add(options);
         }
         else if(options.get) {
-            await menv.get(options);
+            await actions.get(options);
         }
         else if(options.edit) {
-            await menv.edit(options);
+            await actions.edit(options);
         }
         else if(options.delete) {
-            await menv.delete(options);
+            await actions.delete(options);
         }
 
         return;
