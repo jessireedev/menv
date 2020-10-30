@@ -29,5 +29,9 @@
     "bin/",
     "src/",
     "templates/"
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jessireedev/menv.git"
+  }
 }
