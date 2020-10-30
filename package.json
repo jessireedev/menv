@@ -1,0 +1,33 @@
+{
+  "name": "@jessireedev/menv",
+  "version": "1.0.0",
+  "description": "A CLI tool that helps to manage your keys on your .env file.",
+  "main": "src/index.js",
+  "bin": {
+    "@jessireedev/menv": "bin/menv",
+    "menv": "bin/menv"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "cli",
+    "menv",
+    "env"
+  ],
+  "author": "jessireedev",
+  "license": "MIT",
+  "dependencies": {
+    "arg": "^4.1.3",
+    "esm": "^3.2.18",
+    "inquirer": "^7.3.3"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "templates/"
+  ]
+}
