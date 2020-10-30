@@ -1,6 +1,10 @@
 # menv
 menv is a CLI tool that helps to manage your keys on your .env file.
 
+## Installation
+
+`npm install --global @jessireedev/menv`
+
 ## Usage
 
 menv \<command\> [\<key\>] [\<value\>]

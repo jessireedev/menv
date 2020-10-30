@@ -1,6 +1,6 @@
 {
   "name": "@jessireedev/menv",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A CLI tool that helps to manage your keys on your .env file.",
   "main": "src/index.js",
   "bin": {
@@ -29,5 +29,9 @@
     "bin/",
     "src/",
     "templates/"
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jessireedev/menv.git"
+  }
 }
