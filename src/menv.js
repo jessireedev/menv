@@ -16,7 +16,7 @@ function add (key, value) {
 
     fs.writeFile(filename, formatvalues(values), function (err) {
         if (err) return console.log(err);
-        console.log(key + ' added');
+        console.log(`Key \"${key}\" added`);
     });
 }
 
@@ -25,13 +25,16 @@ function list () {
 
     for(var i=0; i<values.length; i++) {
         const { key = "", value = "" } = values[i];
-        console.log(`${key}: ${value}`);
+        console.log(`${key}\t\"${value}\"`);
     }
 }
 
 function get (key = "") {
     const selected = getvalue(key);
-    console.log(`${selected.key}: ${selected.value}`);
+    if(selected.hasOwnProperty("key"))
+        console.log(`Key \"${selected.key}\" contains the value: \"${selected.value}\"`);
+    else 
+        console.log(`Key \"${key}\" not found`)
 } 
 
 function edit(key = "", value = "") {
@@ -44,7 +47,7 @@ function edit(key = "", value = "") {
 
     fs.writeFile(filename, formatvalues(values), function (err) {
         if (err) return console.log(err);
-        console.log(key + ' updated');
+        console.log(`Key \"${key}\" updated`);
     });
 }
 
@@ -55,7 +58,7 @@ function del(key = "") {
 
     fs.writeFile(filename, formatvalues(values), function (err) {
         if (err) return console.log(err);
-        console.log(key + ' deleted');
+        console.log(`Key \"${key}\" deleted`);
     });
 }
 
@@ -93,7 +96,8 @@ function formatvalues (values) {
     let contents = [];
     for(var i=0; i<values.length; i++) {
         const { key = "", value = "" } = values[i];
-        contents.push(`${key}=${value}`);
+        if(key !== "")
+            contents.push(`${key}=${value}`);
     }
     return contents.join('\n');
 }
@@ -106,6 +110,7 @@ export default function menv (action = "", key = "", value = "") {
         case "get" : get(key); break;
         case "edit" : edit(key, value); break;
         case "delete" : del(key); break;
+        case "getvalue" : return getvalue(key); break;
         default: console.log("invalid option");
     }
 }

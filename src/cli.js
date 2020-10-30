@@ -49,46 +49,49 @@ async function promptForMissingOptions(options) {
     try {
         let { key = "", value = "", yes_to_all = false } = options;
 
-        let questions = [], confirmation = yes_to_all;
+        let confirmation = yes_to_all, stop = false;
     
         if(options.init) {
             if(!yes_to_all) {
-                questions.push({
-                    name: "confirm",
-                    type: "confirm",
-                    message: "Creating .env in a bit, do you want to change the file name?"
-                });
-    
-                const { confirm = false } = await inquirer.prompt([
-                    {
-                        name: "confirm",
-                        type: "confirm",
-                        message: "Creating .env in a bit, do you want to change the file name?"
-                    }
-                ]);
-    
-                if(confirm) {
-                    const { filename = "" } = await inquirer.prompt([
+                key = DEFAULT_FILENAME;
+
+                if(fs.existsSync(key)) {
+                    const { confirm = false } = await inquirer.prompt([
                         {
-                            name: "filename",
-                            message: "Indicate desired filename for your environment file:"
+                            name: "confirm",
+                            type: "confirm",
+                            message: "Environment file (.env) exists, do you want to overwrite it?"
                         }
                     ]);
+
+                    stop = !confirm;
+                }
+                // const { confirm = false } = await inquirer.prompt([
+                //     {
+                //         name: "confirm",
+                //         type: "confirm",
+                //         message: "Creating .env in a bit, do you want to change the file name?"
+                //     }
+                // ]);
     
-                    key = filename !== "" ? filename : DEFAULT_FILENAME;
-                }
-                else {
-                    key = DEFAULT_FILENAME;
-                }
+                // if(confirm) {
+                //     const { filename = "" } = await inquirer.prompt([
+                //         {
+                //             name: "filename",
+                //             message: "Indicate desired filename for your environment file:"
+                //         }
+                //     ]);
+    
+                //     key = filename !== "" ? filename : DEFAULT_FILENAME;
+                //     key = DEFAULT_FILENAME;
+                // }
+                // else {
+                //     key = DEFAULT_FILENAME;
+                // }
             }
         }
         else if(options.add) {
             if(key === "") {
-                questions.push({
-                    name: "key",
-                    message: "Provide a key for your new environment variable:"
-                });
-
                 const { variable_name = "" } = await inquirer.prompt([
                     {
                         name: "variable_name",
@@ -98,12 +101,32 @@ async function promptForMissingOptions(options) {
                 
                 key = variable_name;
             }
+
+            const existing_key = menv("getvalue", key);
+            if(existing_key.hasOwnProperty("key")) {
+                const { confirm = false } = await inquirer.prompt([
+                    {
+                        name: "confirm",
+                        type: "confirm",
+                        message: `Key \"${key}\" exists in your environment file, do you want to edit it instead?`
+                    }
+                ]);
+
+                if(confirm) {
+                    options.add = false;
+                    options.edit = true;
+                    yes_to_all = true;
+                    confirmation = confirm;
+                }
+
+                stop = !confirm;
+            }
     
-            if(value === "") {
+            if(!stop && value === "") {
                 const { variable_value = "" } = await inquirer.prompt([
                     {
                         name: "variable_value",
-                        message: `Provide a value for ${key}:`
+                        message: `Provide a value for \"${key}\":`
                     }
                 ]);
 
@@ -133,24 +156,31 @@ async function promptForMissingOptions(options) {
                 
                 key = variable_name;
             }
+
+            const existing_key = menv("getvalue", key);
+
+            if(Object.keys(existing_key).length === 0) {
+                console.log(`Key \"${key}\" not found`);
+                stop = true;
+            }
     
-            if(value === "") {
+            if(!stop && value === "") {
                 const { variable_value = "" } = await inquirer.prompt([
                     {
                         name: "variable_value",
-                        message: `Provide a new value for ${key}:`
+                        message: `Provide a new value for \"${key}\":`
                     }
                 ]);
 
                 value = variable_value;
             }
 
-            if(!yes_to_all) {
+            if(!stop && !yes_to_all) {
                 const { confirm = "" } = await inquirer.prompt([
                     {
                         name: "confirm",
                         type: "confirm",
-                        message: "Are you sure you want to edit " + key + "?",
+                        message: "Are you sure you want to edit \"" + key + "\"?",
                     }
                 ]);
 
@@ -169,12 +199,19 @@ async function promptForMissingOptions(options) {
                 key = variable_name;
             }
 
-            if(!yes_to_all) {
+            const existing_key = menv("getvalue", key);
+
+            if(Object.keys(existing_key).length === 0) {
+                console.log(`Key \"${key}\" not found`);
+                stop = true;
+            }
+
+            if(!stop && !yes_to_all) {
                 const { confirm = "" } = await inquirer.prompt([
                     {
                         name: "confirm",
                         type: "confirm",
-                        message: "Are you sure you want to delete " + key + "?",
+                        message: "Are you sure you want to delete \"" + key + "\"?",
                     }
                 ]);
 
@@ -182,17 +219,17 @@ async function promptForMissingOptions(options) {
             }
         }
     
-        return { ...options, key, value, confirmation };
+        if(!stop) {
+            return { ...options, key, value, confirmation };
+        }
     }
     catch (err) {
         return err;
     }
 }
 
-// actions - // TODO: To be moved to another file
-
 const actions = {
-    init: function ({ key = "" }) {
+    init: function () {
         return new Promise((resolve, reject) => {
             menv("init");
             resolve();
@@ -200,14 +237,13 @@ const actions = {
     },
     add: function ({ key = "", value = "" }) {
         return new Promise((resolve, reject) => {
-            console.log(`add ${key} with value: ${value}`);
+            console.log(`Adding \"${key}\" with value: \"${value}\"...`);
             menv("add", key, value);
             resolve();
         })
     },
     get: function ({ key = "" }) {
         return new Promise((resolve, reject) => {
-            console.log(`get ${key}`);
             menv("get", key);
             resolve();
         })
@@ -215,7 +251,7 @@ const actions = {
     edit: function ({ key = "", value = "", confirmation = false }) {
         return new Promise((resolve, reject) => {
             if(confirmation) {
-                console.log(`update ${key} to ${value}`);
+                console.log(`Updating key \"${key}\" to \"${value}\"...`);
                 menv("edit", key, value);
             }
             else {
@@ -228,7 +264,7 @@ const actions = {
     delete: function ({ key = "", confirmation = false }) {
         return new Promise((resolve, reject) => {
             if(confirmation) {
-                console.log(`delete ${key}`);
+                console.log(`Deleting key \"${key}\"...`);
                 menv("delete", key);
             }
             else {
@@ -237,13 +273,19 @@ const actions = {
 
             resolve();
         })
+    },
+    list: function () {
+        return new Promise((resolve, reject) => {
+            menv("list");
+            resolve();
+        })
     }
 }; 
 
 async function proceedOptionsAction (options) {
     try {
         if(options.help) {
-            console.log("show help");
+            console.log(`menv helps you manage your keys on your environment file.\n\nusage: menv <command> [<key>] [<value>]\n\navailable commands:\n\n --init\t\tinitializes a new .env file\n --help\t\tshows this guide on using menv\n --list\t\tlists the keys and values inside the .env file\n --add\t\tadds a new key inside the .env file\n --get\t\tdisplays the selected key inside the .env file\n --edit\t\tupdates the selected key inside the .env file\n --delete\tdeletes the selected key inside the .env file`);
         }
         else if(options.init) {
             await actions.init(options);
@@ -260,6 +302,9 @@ async function proceedOptionsAction (options) {
         else if(options.delete) {
             await actions.delete(options);
         }
+        else if(options.list) {
+            await actions.list(options);
+        }
 
         return;
     }
@@ -273,7 +318,6 @@ export async function cli(args) {
         let options = parseArgumentsIntoOptions(args);
         options = await promptForMissingOptions(options);
         await proceedOptionsAction(options);
-        // console.log(options);
     }
     catch (err) {
         console.log(err);
