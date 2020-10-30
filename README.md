@@ -1,14 +1,21 @@
 # menv
 menv is a CLI tool that helps to manage your keys on your .env file.
 
-## Functions
-- [x] menv --init
-- [x] menv --help
-- [x] menv --list
-- [x] menv --add [key] [value]
-- [x] menv --get [key] 
-- [x] menv --edit [key] [value]
-- [x] menv --delete [key]
+## Usage
+
+menv \<command\> [\<key\>] [\<value\>]
+
+### Available commands
+
+| Command | Description | 
+| --- | --- |
+| --init | initializes a new .env file | 
+| --help |  shows the guide on using menv | 
+| --list | lists the keys and values inside the .env file | 
+| --add | adds a new key inside the .env file | 
+| --get | displays the selected key inside the .env file | 
+| --edit | updates the selected key inside the .env file | 
+| --delete | deletes the selected key inside the .env file | 
 
 ## Author
 
